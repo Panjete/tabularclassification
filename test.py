@@ -1,2 +1,2 @@
-def test():
+def test(testfile, predfile):
     return
