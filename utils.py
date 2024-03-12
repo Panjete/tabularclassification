@@ -91,12 +91,14 @@ def retrieve_text(filename, writefile, intm_file = "data/intm.txt"):
 def generateW2Vembeddings(corpus_file, save_file="data/w2v"):
     word2vec = gensim.models.Word2Vec(corpus_file=corpus_file, vector_size=100, workers = 4)
     word2vec.wv.save_word2vec_format(save_file, binary=False) ## Set to True later
+    del word2vec
     return
 
 def loadW2Vembeddings(save_file="data/w2v"):
-    word2vec = gensim.models.Word2Vec()
-    word2vec.wv.load_word2vec_format(save_file, binary=False) ## Set to True later
-    return word2vec
+    #word2vec = gensim.models.Word2Vec()
+    #word2vec.wv.load_word2vec_format(save_file, binary=False) ## Set to True later
+    word_vectors = gensim.models.KeyedVectors.load_word2vec_format(save_file, binary=False)
+    return word_vectors
 
 def tokenise_sentence(text):
     return [word.lower() for word in word_tokenize(text)]
@@ -104,6 +106,6 @@ def tokenise_sentence(text):
 
 def get_embeddings(word, model):
     try:
-        return model.wv[word]
+        return model.get_vector(word)
     except KeyError:
-        return model.wv["UNK"]
+        return model.get_vector("UNK")
