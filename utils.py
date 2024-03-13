@@ -7,9 +7,9 @@ import gensim
 import random
 import os
 
-IMPLIES = "<->"
-ENTRY_ROW_WISE_STOP = "|||"
-IS_OF_TYPE = ['has', 'type']
+IMPLIES             = '<->'#"$" ## using multi-char symbol was being partitioned into individual chars by w2v
+ENTRY_ROW_WISE_STOP = '|||'#"%"
+IS_OF_TYPE          = ['has', 'type']
 
 def readjson(filename):
     data = []
@@ -109,3 +109,39 @@ def get_embeddings(word, model):
         return model.get_vector(word)
     except KeyError:
         return model.get_vector("UNK")
+
+
+### Functions for test time 
+def read_queries(filename):
+    ## Returns a list of questions and their corresponding tables (columns for now)
+    ## queries['question']   : List of List of tokens
+    ## queries['table_cols'] : List of List of List of tokens  i, j -> ith question's jth columns tokens
+
+    #tokenizer = lambda x : nltk.tokenize.word_tokenize(x)
+    tokenizer = lambda x: [word.lower() for word in word_tokenize(x)]# if word not in string.punctuation]
+    queries = {"questions" : [], "tables" : [], "table_cols" : [], "qid" : []}
+    numqueries = 0
+    with open(filename, 'r+') as file:
+        for line in file:
+            numqueries += 1
+            data = json.loads(line) # Load the string in this line of the file
+
+            qid = data.get("qid", "") 
+            question = data.get("question", "") 
+            question_tokens = tokenizer(question)
+            queries["qid"].append(qid)
+            queries["questions"].append([question_tokens])
+
+            cols = data.get("table", {}).get("cols", [])
+            cols = [tokenizer(col) for col in cols]
+            col_types = data.get("table", {}).get("types", [])
+            col_types = [tokenizer(col_type) for col_type in col_types]
+
+            table_cols = []
+            for col_tokenised, type_entry in zip(cols, col_types):
+                entry_tokens = col_tokenised + IS_OF_TYPE + type_entry
+                table_cols.append([entry_tokens])
+
+            queries["table_cols"].append([table_cols])
+    
+    return queries, numqueries
