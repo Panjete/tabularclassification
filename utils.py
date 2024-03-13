@@ -119,7 +119,7 @@ def read_queries(filename):
 
     #tokenizer = lambda x : nltk.tokenize.word_tokenize(x)
     tokenizer = lambda x: [word.lower() for word in word_tokenize(x)]# if word not in string.punctuation]
-    queries = {"questions" : [], "tables" : [], "table_cols" : [], "qid" : []}
+    queries = {"questions" : [], "tables" : [], "table_cols" : [], "qids" : []}
     numqueries = 0
     with open(filename, 'r+') as file:
         for line in file:
@@ -129,8 +129,8 @@ def read_queries(filename):
             qid = data.get("qid", "") 
             question = data.get("question", "") 
             question_tokens = tokenizer(question)
-            queries["qid"].append(qid)
-            queries["questions"].append([question_tokens])
+            queries["qids"].append(qid)
+            queries["questions"].append(question_tokens)
 
             cols = data.get("table", {}).get("cols", [])
             cols = [tokenizer(col) for col in cols]
@@ -140,8 +140,44 @@ def read_queries(filename):
             table_cols = []
             for col_tokenised, type_entry in zip(cols, col_types):
                 entry_tokens = col_tokenised + IS_OF_TYPE + type_entry
-                table_cols.append([entry_tokens])
+                table_cols.append(entry_tokens)
 
-            queries["table_cols"].append([table_cols])
+            queries["table_cols"].append(table_cols)
     
     return queries, numqueries
+
+def write_outputs(inputfile, outputfile, cols, rowss):
+    ## cols is a list of numbers -> ith represents the correct column number for the ith query
+    ## rowss is a list of list of numbers -> ith represents the correct rows for the ith query
+    index = 0
+    with open(outputfile, 'w') as outf:
+        with open(inputfile, 'r') as inf:
+            for line in inf:
+                data = json.loads(line) # Load the string in this line of the file
+                data_cols = data.get("table", {}).get("cols", [])
+                data_qid = data.get("qid", "") 
+                data_tablerows = data.get("table", {}).get("rows", [])
+
+                answer_column = cols[index]                  ## The number
+                answer_column_text = data_cols[answer_column] ## The text of the column name
+                print("Answer column == ", answer_column)
+                data_relevant_col_entries = []
+                for row in data_tablerows:
+                    data_relevant_col_entries.append(row[answer_column])
+
+                answer_rows = rowss[index]
+                answer_cells = []
+                for row in answer_rows:
+                    answer_cells.append([row, data_relevant_col_entries[row]])
+        
+
+                
+
+                outdict = {"label_col":[answer_column_text],"label_cell":answer_cells,"label_row":answer_rows, "qid":data_qid}
+                json.dump(outdict, outf)
+                outf.write("\n")
+                index += 1
+                if index == 10:
+                    return
+
+    return
