@@ -9,7 +9,7 @@ def test(testfile, predfile):
 
     ## Load Models
     w2v_embeddings = loadW2Vembeddings(save_file="data/w2v")
-    model_col = Model(2)
+    model_col = Model(4)
     model_col.eval()
     model_col.load_state_dict(torch.load('data/model.pth'))
     answer_columns = [] # List of numbers

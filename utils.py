@@ -100,6 +100,24 @@ def loadW2Vembeddings(save_file="data/w2v"):
     word_vectors = gensim.models.KeyedVectors.load_word2vec_format(save_file, binary=False)
     return word_vectors
 
+
+
+def generateFTembed(corpus_file, save_file="data/ft"):
+    FasT = gensim.models.FastText(vector_size=100, workers = 4, min_count=5)
+    FasT.build_vocab(corpus_file=corpus_file)
+    total_words = FasT.corpus_total_words
+    FasT.train(corpus_file=corpus_file, total_words=total_words, epochs=FasT.epochs)
+
+    FasT.wv.save_word2vec_format(save_file, binary=False) ## Set to True later
+    del FasT
+    return
+
+def loadFTembed(save_file="data/ft"):
+    #word2vec = gensim.models.Word2Vec()
+    #word2vec.wv.load_word2vec_format(save_file, binary=False) ## Set to True later
+    word_vectors = gensim.models.KeyedVectors.load_word2vec_format(save_file, binary=False)
+    return word_vectors
+
 def tokenise_sentence(text):
     return [word.lower() for word in word_tokenize(text)]
 
@@ -119,7 +137,7 @@ def read_queries(filename):
 
     #tokenizer = lambda x : nltk.tokenize.word_tokenize(x)
     tokenizer = lambda x: [word.lower() for word in word_tokenize(x)]# if word not in string.punctuation]
-    queries = {"questions" : [], "tables" : [], "table_cols" : [], "qids" : []}
+    queries = {"questions" : [], "tables" : [], "table_cols" : [], "qids" : [], "correct_col_numbers" : []}
     numqueries = 0
     with open(filename, 'r+') as file:
         for line in file:
@@ -133,9 +151,17 @@ def read_queries(filename):
             queries["questions"].append(question_tokens)
 
             cols = data.get("table", {}).get("cols", [])
+            correct_col = data.get("label_col", ["NULL"])[0]
+            correct_col_number = -1
+            for num, col in enumerate(cols):
+                if col == correct_col:
+                    correct_col_number = num
+                    break
+
             cols = [tokenizer(col) for col in cols]
             col_types = data.get("table", {}).get("types", [])
             col_types = [tokenizer(col_type) for col_type in col_types]
+            
 
             table_cols = []
             for col_tokenised, type_entry in zip(cols, col_types):
@@ -143,6 +169,7 @@ def read_queries(filename):
                 table_cols.append(entry_tokens)
 
             queries["table_cols"].append(table_cols)
+            queries["correct_col_numbers"].append(correct_col_number)
     
     return queries, numqueries
 
@@ -181,3 +208,9 @@ def write_outputs(inputfile, outputfile, cols, rowss):
                     return
 
     return
+
+def find_col(column, cols):
+    for i, col in enumerate(cols):
+        if col == column:
+            return i
+        

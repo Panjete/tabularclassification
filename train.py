@@ -11,7 +11,7 @@ from model import Model
 
 TOKENFILE = False
 W2VEMBEDD = False
-EPOCHS    = 10
+EPOCHS    = 100
 
 def train(trainfile, valfile, interim_text_file = "data/interim_text_file"): ## Change this
 
@@ -28,7 +28,7 @@ def train(trainfile, valfile, interim_text_file = "data/interim_text_file"): ## 
         generateW2Vembeddings(interim_text_file, save_file="data/w2v")
     print("Generated embeddings")
     ## Define Model, Loss and Optimiser
-    model = Model(2)
+    model = Model(4)
     loss_function = torch.nn.CosineEmbeddingLoss()
     optim = torch.optim.Adam(model.parameters(), lr=1e-3)
     print("Defined Model, Loss and Optim")
@@ -75,11 +75,11 @@ def train(trainfile, valfile, interim_text_file = "data/interim_text_file"): ## 
                     
                     question_tensors = [torch.tensor(get_embeddings(word, w2v_embeddings)) for word in question_tokens]
                     question_tensor = torch.stack(question_tensors, dim = 0)
-                    #print("question Tensor shape = ", question_tensor.shape)
+                    print("question Tensor shape = ", question_tensor.shape)
                     ### Bring CLS token closer to correct_col embedding
                     ### And farther from other negative samples
                     CLS = model(question_tensor)
-                    #print("Model Output shape = ", CLS.shape)
+                    print("Model Output shape = ", CLS.shape)
                     CLS_broadcasted = CLS.repeat(6, 1)
                     #print("Model Output Broadcased shape = ", CLS_broadcasted.shape)
 
