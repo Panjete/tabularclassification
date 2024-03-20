@@ -9,11 +9,11 @@ import random
 from utils import retrieve_text, generateW2Vembeddings, loadW2Vembeddings,\
                      tokenise_sentence, get_embeddings, read_queries,\
                           find_col, generateFTembed, loadFTembed
-from model import Model
+from redundant.model import Model
 from torch.nn.functional import cosine_similarity
 
 TOKENFILE = False
-W2VEMBEDD = True
+W2VEMBEDD = False
 EPOCHS    = 100
 
 def train(trainfile, valfile, interim_text_file = "data/interim_text_file"): ## Change this
@@ -31,6 +31,7 @@ def train(trainfile, valfile, interim_text_file = "data/interim_text_file"): ## 
         #generateW2Vembeddings(interim_text_file, save_file="data/w2v")
         generateFTembed(interim_text_file, save_file="data/ft")
 
+    breakpoint()
     if torch.cuda.is_available():
         device = "cuda"
         print("Cuda is available")

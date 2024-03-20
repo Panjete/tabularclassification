@@ -9,5 +9,5 @@ while [ "$1" != "" ]; do
 done
 
 echo "Input taken!"
-python top.py "${args[@]}"
+python3 top.py "${args[@]}"
 echo "Shell script successfully terminated!"
